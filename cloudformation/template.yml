@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation template to create an S3 bucket and a Lambda function
+
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-workshop-s3-bucket
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MyLambdaFunction
+      Runtime: python3.8
+      Handler: handler.lambda_handler
+      Code:
+        S3Bucket: my-workshop-s3-bucket
+        S3Key: lambda.zip
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaS3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::my-workshop-s3-bucket/*"
